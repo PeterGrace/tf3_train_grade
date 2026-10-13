@@ -21,7 +21,10 @@ local record Consist
 	length : number
 end
 
+-- Intentionally never pruned: one small entry per vehicle viewed.
 local consists : {Engine.Entity : Consist} = {}
+
+local gradeErrorLogged : {Engine.Entity : boolean} = {}
 
 local function consistOf(tv : Engine.Component.TransportVehicle, entity : Engine.Entity) : Consist
 	local ids : {string} = {}
@@ -36,12 +39,16 @@ local function consistOf(tv : Engine.Component.TransportVehicle, entity : Engine
 	local result : Consist = { key = key, emptyKgs = {}, length = 0 }
 	for _, part in ipairs(tv.transportVehicleConfig.vehicles) do
 		local model = api.res.modelRep.get(part.part.modelId)
-		local land = model.metadata["landVehicle"] as ModelMetadata.LandVehicle
-		local extent = model.metadata["extent"] as Extent
-		result.emptyKgs[#result.emptyKgs + 1] = land ~= nil and land.weightEmpty or 0
-		if extent ~= nil then
-			result.length = result.length + (extent.bbMax.x - extent.bbMin.x)
+		local emptyKg = 0.0
+		if model ~= nil then
+			local land = model.metadata["landVehicle"] as ModelMetadata.LandVehicle
+			local extent = model.metadata["extent"] as Extent
+			emptyKg = land ~= nil and land.weightEmpty or 0
+			if extent ~= nil then
+				result.length = result.length + (extent.bbMax.x - extent.bbMin.x)
+			end
 		end
+		result.emptyKgs[#result.emptyKgs + 1] = emptyKg
 	end
 	consists[entity] = result
 	return result
@@ -71,6 +78,9 @@ local function segmentsBehind(movePath : Engine.Component.MovePath, vehicleLengt
 	local i = front
 	while i >= 1 do
 		local pair = movePath.path.edges[i]
+		if pair == nil then
+			break
+		end
 		local edgeId = pair[1] as EdgeId
 		local forward = pair[2] as boolean
 		if not api.engine.entityExists(edgeId.entity) then
@@ -81,7 +91,13 @@ local function segmentsBehind(movePath : Engine.Component.MovePath, vehicleLengt
 			network = api.engine.getComponent(edgeId.entity, api.type.ComponentType.TRANSPORT_NETWORK) as Engine.Component.TransportNetwork
 			networks[edgeId.entity] = network
 		end
+		if network == nil then
+			break
+		end
 		local edge = network.edges[edgeId.index + 1]   -- index is zero-based
+		if edge == nil then
+			break
+		end
 		local geometry = edge.geometry
 		segments[#segments + 1] = {
 			length = geometry.length,
@@ -121,8 +137,17 @@ function vehicle_data.read(entity : Engine.Entity) : PgraceTrainGradeVehicleData
 	local segments : {Segment} = {}
 	local flags : {string} = {}
 	if movePath ~= nil and #movePath.path.edges > 0 then
-		segments, flags = segmentsBehind(movePath, consist.length)
-		g = grade.averageGrade(segments, movePath.dyn.pathPos.pos01, consist.length)
+		-- a failed grade read must not hide the weight
+		local ok, res = pcall(function() : number
+			segments, flags = segmentsBehind(movePath, consist.length)
+			return grade.averageGrade(segments, movePath.dyn.pathPos.pos01, consist.length)
+		end)
+		if ok then
+			g = res as number
+		elseif not gradeErrorLogged[entity] then
+			gradeErrorLogged[entity] = true
+			debugPrint(LOG_PREFIX .. "grade failed for " .. tostring(entity) .. ": " .. tostring(res))
+		end
 	end
 
 	-- PROBE (remove before release): about once a second per open window (polled every 0.25 s)
@@ -132,10 +157,15 @@ function vehicle_data.read(entity : Engine.Entity) : PgraceTrainGradeVehicleData
 		for _, load in ipairs(loads) do
 			loadText[#loadText + 1] = tostring(load.count) .. "x" .. tostring(load.unitWeight)
 		end
-		local zFront : number = nil
-		if #segments > 0 and movePath ~= nil then
-			zFront = segments[1].heightAt(movePath.dyn.pathPos.pos01)
-		end
+		local zFront : number = nil   -- PROBE (remove before release)
+		if #segments > 0 and movePath ~= nil then   -- PROBE (remove before release)
+			local zOk, zRes = pcall(function() : number   -- PROBE (remove before release)
+				return segments[1].heightAt(movePath.dyn.pathPos.pos01)   -- PROBE (remove before release)
+			end)   -- PROBE (remove before release)
+			if zOk then   -- PROBE (remove before release)
+				zFront = zRes as number   -- PROBE (remove before release)
+			end   -- PROBE (remove before release)
+		end   -- PROBE (remove before release)
 		debugPrint(LOG_PREFIX .. "probe entity=" .. tostring(entity)
 			.. " edgeIndex=" .. tostring(movePath and movePath.dyn.pathPos.edgeIndex)
 			.. " pos01=" .. tostring(movePath and movePath.dyn.pathPos.pos01)
