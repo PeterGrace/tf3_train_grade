@@ -29,9 +29,11 @@ at station:  ⏱ Loading  [coal] 117/120 ...   (unchanged)
 Replace `entity_window_util.SpeedIndicator` (exported, `Recipe<Engine.Entity>`) through a
 `react-replacement-config`. The replacement **wraps** the base widget:
 
-- train, not at terminal: horizontal `BoxLayout` of `[weight entry] [grade entry]` followed by
-  `react.CallOriginalRecipe(entity_window_util.SpeedIndicator, entityId)`;
-- otherwise: only `react.CallOriginalRecipe(...)`, inside a `BoxLayout` (a recipe must return a layout).
+a horizontal `BoxLayout` of `[weight pill] [grade pill]` followed by
+`react.CallOriginalRecipe(entity_window_util.SpeedIndicator, entityId)`. The tree is always the same; the pills get the
+`invisible` style class unless the entity is a train that isn't at a terminal, so the original's state survives them
+showing and hiding. The pills are styled by our own stylesheet, a copy of the base `R::SpeedIndicator` rules, because
+those rules don't reach our recipe.
 
 The base widget keeps its own behaviour (Stopped, No Path, loading messages). Rejected options:
 - copying and extending the base recipe (it goes stale on game updates);
@@ -72,16 +74,19 @@ Polled with `useStepStateTimer(fn, 0.25)` in the replacement recipe. Everything 
    (`simEntityAtVehicleSystem.getVehicleSimEntitiesCountForCargoType(train, cargo)`) times
    `cargoTypeRep.get(cargo).weight`.
 4. **Grade** (live):
-   - From `MOVE_PATH`, read `path.edges`, `dyn.pathPos` (`edgeIndex`, `pos01`) and `occupiedBackIndex`.
-   - For each edge from `edgeIndex` back to `occupiedBackIndex`, read the geometry at
-     `TRANSPORT_NETWORK(edgeId.entity).edges[edgeId.index + 1].geometry`. Cache network components within one poll.
-   - Each edge becomes a segment `{length, heightAt(t) = calcPos(geom, t)[1].z, reversed}`.
+   - From `MOVE_PATH`, read `path.edges` and `dyn.pathPos` (`edgeIndex`, `pos01`).
+   - Walk edges from `edgeIndex` backwards until they cover the train's length plus the front edge, reading each
+     geometry at `TRANSPORT_NETWORK(edgeId.entity).edges[edgeId.index + 1].geometry`. Cache network components
+     within one poll. `occupiedBackIndex` is logged by the probe but not relied on.
+   - Each edge becomes a segment `{length, heightAt(t) = api.engine.util.transport.calcPosition(geom, t).z, reversed}`.
    - `grade.tl` walks back from the front over `trainLength` metres along the track and returns
      `(zFront − zBack) / distanceCovered`, using the distance actually covered if the path runs out, or `nil` if
      that's under 1 m.
-5. **Render:** two `Component`s matching the base entries (icon `ImageView`, horizontal spacer, `TextView` with
-   `font-scale-body`), with the tooltip on the weight entry. Text is formatted once per poll. Icons are picked from
-   the base set during implementation (contact sheet).
+5. **Render:** two pills matching the base entries (icon `ImageView`, horizontal spacer, `TextView` with
+   `font-scale-body`), with the tooltip on the weight pill. Text is formatted once per poll.
+   - Weight icon: `::/gui/line_vehicle_mgmt/icons/symbol_weight.tga`.
+   - Grade icon: the track builder's slope arrows `::/gui/construction/build_control/symbol_slope_<n>_20.tga`, with
+     n = 0 for flat (inside ±0.05%), ±1 under 2% and ±2 from 2%, signed like the grade.
 
 ### Pure module interfaces
 
@@ -95,6 +100,7 @@ end
 -- segments[1] is the front edge, then backwards. frontT is pathPos.pos01 on segments[1].
 averageGrade : function(segments : {Segment}, frontT : number, trainLength : number) : number   -- nil if < 1 m
 formatGrade : function(grade : number) : string                                                  -- "+1.8%", "0.0%", "—"
+iconFor : function(grade : number) : string                                                      -- slope arrow path
 
 -- weight.tl
 record CargoLoad
@@ -138,14 +144,18 @@ Fallback if (a) or (c) is wrong: walk from `edgeIndex` over `trainLength`, in wh
   - a reversed edge flips the sign;
   - a path shorter than the train uses the distance covered;
   - under 1 m gives nil;
-  - `formatGrade`: the sign, the dead band, rounding and nil.
+  - `formatGrade`: the sign, the dead band, rounding and nil;
+  - `iconFor`: flat, gentle and steep, both ways.
 - `weight_test.lua`: an empty train, mixed cargo, the kg-to-t conversion.
 
 **In-game session 1:** the full feature plus `-- PROBE` debugPrints, about one per second per open window:
 - `edgeIndex`, `pos01`, `occupiedBackIndex`, `#path.edges` and the direction flags;
 - front and back z, the grade, the train's length;
 - the cargo counts × unit weights and the weight totals;
-- the front edge's `calcPos` point compared with the locomotive's position.
+- `zFront`, to check that heights are absolute.
+
+Whether `pathPos` is the front is checked visually: over a crest, the grade must start falling as soon as the
+locomotive (which the camera follows) passes it.
 
 Checklist for the user:
 1. A loaded freight train on a known grade, going over a crest and a dip.
