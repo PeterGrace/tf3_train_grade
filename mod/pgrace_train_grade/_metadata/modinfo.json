@@ -8,6 +8,68 @@
     "name": "Vehicle Grade and Weight",
     "summary": "Shows a vehicle's total weight and the grade it's on, next to the speed in the vehicle window.",
     "description": "Adds two readouts next to the speed under the camera view in the vehicle window. Weight: the vehicle's total weight, empty weight plus the passengers and cargo on board; hover it for the split. Grade: the average slope under the whole vehicle, in percent, + when climbing and - when descending. Works for trains, trams, buses and trucks; ship, aircraft and person windows are unchanged. The readouts hide while the vehicle is at a stop. Cosmetic: achievements stay enabled.",
+    "localization": {
+        "de": {
+            "name": "Steigung und Gewicht",
+            "summary": "Zeigt das Gesamtgewicht eines Fahrzeugs und seine Steigung neben der Geschwindigkeit an.",
+            "description": "Fügt im Fahrzeugfenster neben der Geschwindigkeit unter der Kameraansicht zwei Anzeigen hinzu. Gewicht: das Gesamtgewicht des Fahrzeugs, Leergewicht plus Passagiere und Fracht an Bord; mit der Maus darüberfahren zeigt die Aufteilung. Steigung: die durchschnittliche Neigung unter dem ganzen Fahrzeug in Prozent, + bergauf und − bergab. Funktioniert für Züge, Straßenbahnen, Busse und Lkw; Schiffs-, Flugzeug- und Personenfenster bleiben unverändert. Die Anzeigen werden ausgeblendet, solange das Fahrzeug an einer Haltestelle steht. Kosmetisch: Errungenschaften bleiben aktiviert."
+        },
+        "es": {
+            "name": "Pendiente y peso del vehículo",
+            "summary": "Muestra el peso total de un vehículo y la pendiente en la que está, junto a la velocidad.",
+            "description": "Añade dos indicadores junto a la velocidad, bajo la vista de cámara de la ventana del vehículo. Peso: el peso total del vehículo, el peso en vacío más los pasajeros y la carga a bordo; pasa el ratón por encima para ver el desglose. Pendiente: la inclinación media bajo todo el vehículo, en porcentaje, + al subir y − al bajar. Funciona con trenes, tranvías, autobuses y camiones; las ventanas de barcos, aviones y personas no cambian. Los indicadores se ocultan mientras el vehículo está en una parada. Cosmético: los logros siguen activados."
+        },
+        "fr": {
+            "name": "Pente et poids des véhicules",
+            "summary": "Affiche le poids total d'un véhicule et la pente sur laquelle il roule, à côté de la vitesse.",
+            "description": "Ajoute deux indicateurs à côté de la vitesse, sous la vue caméra de la fenêtre du véhicule. Poids : le poids total du véhicule, le poids à vide plus les passagers et le fret à bord ; survolez-le pour voir le détail. Pente : la pente moyenne sous l'ensemble du véhicule, en pourcentage, + en montée et − en descente. Fonctionne pour les trains, tramways, bus et camions ; les fenêtres des navires, avions et personnes ne changent pas. Les indicateurs sont masqués pendant que le véhicule est à un arrêt. Cosmétique : les succès restent activés."
+        },
+        "it": {
+            "name": "Pendenza e peso dei veicoli",
+            "summary": "Mostra il peso totale di un veicolo e la pendenza su cui si trova, accanto alla velocità.",
+            "description": "Aggiunge due indicatori accanto alla velocità, sotto la visuale della telecamera nella finestra del veicolo. Peso: il peso totale del veicolo, il peso a vuoto più i passeggeri e il carico a bordo; passa il mouse sopra per vedere la ripartizione. Pendenza: l'inclinazione media sotto l'intero veicolo, in percentuale, + in salita e − in discesa. Funziona per treni, tram, autobus e camion; le finestre di navi, aerei e persone non cambiano. Gli indicatori si nascondono mentre il veicolo è fermo a una fermata. Cosmetica: gli obiettivi restano attivi."
+        },
+        "ja": {
+            "name": "車両の勾配と重量",
+            "summary": "車両ウィンドウの速度の横に、車両の総重量と走行中の勾配を表示します。",
+            "description": "車両ウィンドウのカメラビューの下、速度の横に2つの表示を追加します。重量：空車重量に乗客と積荷を加えた車両の総重量。マウスを重ねると内訳が表示されます。勾配：車両全体の下にある平均勾配（%）。上りは＋、下りは−。列車、路面電車、バス、トラックに対応し、船、航空機、人物のウィンドウは変わりません。停留所に停車中は表示が隠れます。見た目だけのMODのため、実績は有効のままです。"
+        },
+        "ko": {
+            "name": "차량 경사도와 무게",
+            "summary": "차량 창의 속도 옆에 차량의 총 무게와 현재 경사도를 표시합니다.",
+            "description": "차량 창의 카메라 화면 아래, 속도 옆에 두 가지 표시를 추가합니다. 무게: 공차 무게에 탑승한 승객과 화물을 더한 차량의 총 무게이며, 마우스를 올리면 내역이 표시됩니다. 경사도: 차량 전체 아래의 평균 경사(%)로, 오르막은 +, 내리막은 −입니다. 기차, 트램, 버스, 트럭에서 작동하며 선박, 항공기, 사람 창은 바뀌지 않습니다. 차량이 정류장에 있는 동안에는 표시가 숨겨집니다. 외형 전용 모드이므로 업적이 계속 활성화됩니다."
+        },
+        "nl": {
+            "name": "Voertuighelling en -gewicht",
+            "summary": "Toont het totale gewicht van een voertuig en de helling waarop het rijdt, naast de snelheid.",
+            "description": "Voegt twee aanduidingen toe naast de snelheid, onder het camerabeeld in het voertuigvenster. Gewicht: het totale gewicht van het voertuig, het leeggewicht plus de passagiers en lading aan boord; beweeg de muis erover voor de verdeling. Helling: de gemiddelde helling onder het hele voertuig, in procenten, + bergop en − bergaf. Werkt voor treinen, trams, bussen en vrachtwagens; vensters van schepen, vliegtuigen en personen blijven ongewijzigd. De aanduidingen verdwijnen zolang het voertuig bij een halte staat. Cosmetisch: prestaties blijven ingeschakeld."
+        },
+        "pl": {
+            "name": "Nachylenie i masa pojazdów",
+            "summary": "Pokazuje całkowitą masę pojazdu i nachylenie, na którym się znajduje, obok prędkości.",
+            "description": "Dodaje dwa wskaźniki obok prędkości, pod widokiem kamery w oknie pojazdu. Masa: całkowita masa pojazdu, czyli masa własna plus pasażerowie i ładunek na pokładzie; najedź kursorem, aby zobaczyć podział. Nachylenie: średnie nachylenie pod całym pojazdem w procentach, + pod górę i − w dół. Działa dla pociągów, tramwajów, autobusów i ciężarówek; okna statków, samolotów i osób się nie zmieniają. Wskaźniki są ukryte, gdy pojazd stoi na przystanku. Kosmetyczny: osiągnięcia pozostają włączone."
+        },
+        "pt_BR": {
+            "name": "Inclinação e peso do veículo",
+            "summary": "Mostra o peso total de um veículo e a inclinação em que ele está, ao lado da velocidade.",
+            "description": "Adiciona dois indicadores ao lado da velocidade, abaixo da visão da câmera na janela do veículo. Peso: o peso total do veículo, o peso vazio mais os passageiros e a carga a bordo; passe o mouse por cima para ver a divisão. Inclinação: a inclinação média sob o veículo inteiro, em porcentagem, + na subida e − na descida. Funciona para trens, bondes, ônibus e caminhões; as janelas de navios, aeronaves e pessoas não mudam. Os indicadores ficam ocultos enquanto o veículo está em uma parada. Cosmético: as conquistas continuam ativadas."
+        },
+        "ru": {
+            "name": "Уклон и масса транспорта",
+            "summary": "Показывает общую массу транспорта и уклон, на котором он находится, рядом со скоростью.",
+            "description": "Добавляет два показателя рядом со скоростью под видом с камеры в окне транспорта. Масса: общая масса транспорта — масса тары плюс пассажиры и груз на борту; наведите курсор, чтобы увидеть разбивку. Уклон: средний уклон под всем транспортным средством в процентах, + на подъёме и − на спуске. Работает для поездов, трамваев, автобусов и грузовиков; окна кораблей, самолётов и людей не меняются. Показатели скрываются, пока транспорт стоит на остановке. Косметический мод: достижения остаются доступными."
+        },
+        "zh_CN": {
+            "name": "车辆坡度与重量",
+            "summary": "在车辆窗口的速度旁显示车辆总重量和所在坡度。",
+            "description": "在车辆窗口摄像机画面下方的速度旁添加两个读数。重量：车辆总重量，即空车重量加上车上的乘客和货物；将鼠标悬停其上可查看明细。坡度：整辆车下方的平均坡度（百分比），上坡为 +，下坡为 −。适用于火车、有轨电车、公交车和卡车；船舶、飞机和人物窗口保持不变。车辆停靠站点时读数会隐藏。外观类模组：成就保持启用。"
+        },
+        "zh_TW": {
+            "name": "車輛坡度與重量",
+            "summary": "在車輛視窗的速度旁顯示車輛總重量與所在坡度。",
+            "description": "在車輛視窗攝影機畫面下方的速度旁加入兩個讀數。重量：車輛總重量，即空車重量加上車上的乘客與貨物；將滑鼠停在上方可查看明細。坡度：整輛車下方的平均坡度（百分比），上坡為 +，下坡為 −。適用於火車、路面電車、公車與卡車；船舶、飛機與人物視窗維持不變。車輛停靠站點時讀數會隱藏。外觀類模組：成就保持啟用。"
+        }
+    },
     "tags": [
         "Script Mod"
     ],
