@@ -87,13 +87,7 @@ end)
 
 -- Replaces entity_window_util.SpeedIndicator (vehicle and person windows). The original always renders, in the same
 -- place in the tree, so its own state survives our pills showing and hiding.
-local rendered : {Engine.Entity : boolean} = {}   -- PROBE (remove before release)
-
 local SpeedStrip = react.RegisterRecipe("PgraceTrainGradeSpeedStrip", function(entityId : Engine.Entity) : TreeNodeId
-	if not rendered[entityId] then   -- PROBE (remove before release)
-		rendered[entityId] = true   -- PROBE (remove before release)
-		debugPrint(LOG_PREFIX .. "probe strip render entity=" .. tostring(entityId))   -- PROBE (remove before release)
-	end   -- PROBE (remove before release)
 	local state = engine_react_util.useStepStateTimer(function() : StripState
 		return computeState(entityId)
 	end, 0.25)
@@ -109,9 +103,7 @@ local SpeedStrip = react.RegisterRecipe("PgraceTrainGradeSpeedStrip", function(e
 end)
 
 local function doReplace(replacementApi : ReactReplacementApi)
-	debugPrint(LOG_PREFIX .. "probe doReplace called")   -- PROBE (remove before release)
 	replacementApi.ReplaceRecipe(entity_window_util.SpeedIndicator, SpeedStrip)
-	debugPrint(LOG_PREFIX .. "probe doReplace done")   -- PROBE (remove before release)
 end
 
 debugPrint(LOG_PREFIX .. "script loaded")
