@@ -6,8 +6,8 @@
         }
     ],
     "name": "Vehicle Grade and Weight",
-    "summary": "TODO: one line, at most 100 characters.",
-    "description": "TODO: plain-text description (description.html is what mod.io shows).",
+    "summary": "Shows a vehicle's total weight and the grade it's on, next to the speed in the vehicle window.",
+    "description": "Adds two readouts next to the speed under the camera view in the vehicle window. Weight: the vehicle's total weight, empty weight plus the passengers and cargo on board; hover it for the split. Grade: the average slope under the whole vehicle, in percent, + when climbing and - when descending. Works for trains, trams, buses and trucks; ship, aircraft and person windows are unchanged. The readouts hide while the vehicle is at a stop. Cosmetic: achievements stay enabled.",
     "tags": [
         "Script Mod"
     ],

@@ -1,24 +1,30 @@
-# Train Grade and Weight (Transport Fever 3 mod)
+# Vehicle Grade and Weight (Transport Fever 3 mod)
 
-TODO: what the mod does.
+Adds two readouts next to the speed under the camera view in a land vehicle's window (train, tram, bus or truck):
+the vehicle's total weight (hover for empty and cargo weight) and the average grade under it, + when climbing.
 
-- Mod ID: `pgrace_train_grade`
+- Mod ID: `pgrace_train_grade` (the repo and modId keep the original "train grade" name; the display name changed)
 - Cosmetic: yes. It doesn't affect the simulation, so achievements stay enabled.
+- Design and plan: `docs/superpowers/specs/2026-10-12-train-grade-design.md`, `docs/superpowers/plans/2026-10-12-train-grade.md`
 
-Agent and modding notes for all mods live in `../AGENTS.md`.
+Agent and modding notes for all mods live in `../AGENTS.md` (see "Adding to a base widget by replacing it" and the
+vehicle facts under "Game data facts").
 
 ## Layout
 
 ```
-mod/pgrace_train_grade/                        # the mod folder TF3 loads
-├── mod.json, _metadata/              # modinfo.json, description.html, screenshots
-├── tealdef/                          # Teal type definitions (canonical; build.py mirrors them into content/)
+mod/pgrace_train_grade/                    # the mod folder TF3 loads
+├── mod.json, _metadata/                   # modinfo.json, description.html, screenshots
+├── tealdef/                               # Teal type definitions (canonical; build.py mirrors them into content/)
 └── content/gui/pgrace_train_grade/
-    ├── industry_plugin.res.lua       # registers the card in the industry window
-    ├── pgrace_train_grade.script.tl           # UI
-    └── util.tl                       # pure helpers (unit-tested)
-tools/                                # type check, tests, install, release checks
-tests/                                # unit tests for pure modules
+    ├── speed_strip_replacement.res.lua    # replaces the base SpeedIndicator recipe with ours
+    ├── speed_strip.script.tl              # UI: weight and grade pills, wrapping the original speed readout
+    ├── speed_strip.css.lua                # pill styles (copied from the base speed readout)
+    ├── vehicle_data.tl                    # all api.* reads: vehicle, weights, path and track heights
+    ├── grade.tl                           # pure: average grade over a path span, text, icon (unit-tested)
+    └── weight.tl                          # pure: weight sums (unit-tested)
+tools/                                     # type check, tests, install, release checks
+tests/                                     # unit tests for pure modules
 ```
 
 ## Dev loop
@@ -31,7 +37,7 @@ just install    # symlink into TF3's staging area (just install-copy to copy)
 ```
 
 Restart TF3 after code changes. The log is
-`~/.local/share/Steam/userdata/*/3493540/local/crash_dump/stdout.txt`; our lines start with `[pgrace_train_grade]`.
+`~/.local/share/Steam/userdata/*/3493540/local/crash_dump/stdout.txt`; our lines start with `[train_grade]`.
 
 ## Releasing
 
