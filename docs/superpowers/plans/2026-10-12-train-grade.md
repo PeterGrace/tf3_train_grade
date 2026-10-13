@@ -1,15 +1,15 @@
-# Train Grade Implementation Plan
+# Vehicle Grade and Weight Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or
 > superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** In a train's vehicle window, show the gross weight (with an empty/cargo tooltip) and the average grade over
-the train's length as two pills before the speed in the camera strip.
+**Goal:** In a land vehicle's window (train, tram, bus or truck), show the gross weight (with an empty/cargo tooltip) and the average grade over
+the vehicle's length as two pills before the speed in the camera strip.
 
 **Architecture:** A `react-replacement-config` replaces the base `entity_window_util.SpeedIndicator` with our recipe,
 which renders `[weight pill] [grade pill]` followed by `react.CallOriginalRecipe(SpeedIndicator, entityId)`. The pills
-hide (style class `invisible`) unless the entity is a rail vehicle that isn't at a terminal. Pure logic (grade
-walk, weight sums, text and icon choice) lives in unit-tested modules; `train_data.tl` does every `api.*` read.
+hide (style class `invisible`) unless the entity is a land vehicle (rail, tram or road) that isn't at a terminal. Pure logic (grade
+walk, weight sums, text and icon choice) lives in unit-tested modules; `vehicle_data.tl` does every `api.*` read.
 
 **Tech Stack:** Teal 0.24.8 (type-checked against the TF3 tealdefs), plain Lua 5.4 tests (`tools/test.lua`), `just`.
 
@@ -38,7 +38,7 @@ walk, weight sums, text and icon choice) lives in unit-tested modules; `train_da
 | --- | --- |
 | `tealdef/gui/pgrace_train_grade/grade.d.tl` + `content/.../grade.tl` | Pure: average grade over a path span, grade text, grade icon |
 | `tealdef/gui/pgrace_train_grade/weight.d.tl` + `content/.../weight.tl` | Pure: weight sums in tons |
-| `tealdef/gui/pgrace_train_grade/train_data.d.tl` + `content/.../train_data.tl` | All `api.*` reads; returns a `Reading` or nil |
+| `tealdef/gui/pgrace_train_grade/vehicle_data.d.tl` + `content/.../vehicle_data.tl` | All `api.*` reads; returns a `Reading` or nil |
 | `content/.../speed_strip.script.tl` | Replacement recipe, pill recipe, `doReplace` |
 | `content/.../speed_strip_replacement.res.lua` | Registers the replacement config |
 | `content/.../speed_strip.css.lua` | Pill styles, copied from the base `R::SpeedIndicator` rules |
@@ -77,20 +77,20 @@ git checkout -b feat/weight-and-grade
 ```teal
 -- Pure grade maths (no api.* calls), so tests/grade_test.lua can run it in plain Lua.
 global record PgraceTrainGradeGrade
-	-- One track edge the train covers. t runs 0..1 in the edge's own direction.
+	-- One track or lane edge the vehicle covers. t runs 0..1 in the edge's own direction.
 	record Segment
 		-- metres along the track
 		length : number
 		-- world height at t
 		heightAt : function(t : number) : number
-		-- true when the train travels from t = 1 towards t = 0
+		-- true when the vehicle travels from t = 1 towards t = 0
 		reversed : boolean
 	end
 
-	-- Average grade (rise / distance, 0.02 = 2%) over the trainLength metres behind the front, signed in the direction
+	-- Average grade (rise / distance, 0.02 = 2%) over the vehicleLength metres behind the front, signed in the direction
 	-- of travel. segments[1] holds the front, at frontT; later segments lie further behind. If the segments run out,
 	-- uses the distance they cover. nil if that's under 1 m.
-	averageGrade : function(segments : {Segment}, frontT : number, trainLength : number) : number
+	averageGrade : function(segments : {Segment}, frontT : number, vehicleLength : number) : number
 
 	-- "+1.8%", "-0.4%"; "0.0%" inside +-0.05%; "—" for nil.
 	formatGrade : function(grade : number) : string
@@ -139,7 +139,7 @@ t.test("averageGrade: flat track is 0", function()
 end)
 
 t.test("averageGrade: constant 2% on one edge", function()
-	-- front at 400 m into a 500 m edge rising 10 m; the train covers 200..400 m
+	-- front at 400 m into a 500 m edge rising 10 m; the vehicle covers 200..400 m
 	near(grade.averageGrade({ edge(500, 0, 10) }, 0.8, 200), 0.02)
 end)
 
@@ -168,7 +168,7 @@ t.test("averageGrade: a reversed edge flips the sign", function()
 	near(grade.averageGrade({ edge(500, 0, 10, true) }, 0.2, 200), -0.02)
 end)
 
-t.test("averageGrade: a path shorter than the train uses what it covers", function()
+t.test("averageGrade: a path shorter than the vehicle uses what it covers", function()
 	-- front at t = 0.5 of a 100 m edge rising 2 m: only 50 m behind the front, 1 m of rise
 	near(grade.averageGrade({ edge(100, 0, 2) }, 0.5, 300), 0.02)
 end)
@@ -217,12 +217,12 @@ local FLAT = 0.0005   -- |grade| below this shows as 0.0%
 local STEEP = 0.02    -- 2% and up gets the steep arrow
 local ICON_BASE = "::/gui/construction/build_control/symbol_slope_"
 
-function grade.averageGrade(segments : {Segment}, frontT : number, trainLength : number) : number
+function grade.averageGrade(segments : {Segment}, frontT : number, vehicleLength : number) : number
 	if #segments == 0 then
 		return nil
 	end
 	local zFront = segments[1].heightAt(frontT)
-	local remaining = trainLength
+	local remaining = vehicleLength
 	local covered = 0.0
 	local zBack = zFront
 	for i, seg in ipairs(segments) do
@@ -428,7 +428,7 @@ Expected: `0 error(s)`.
 
 ```bash
 git add tests/weight_test.lua mod/pgrace_train_grade/tealdef mod/pgrace_train_grade/content/gui/pgrace_train_grade/weight.tl mod/pgrace_train_grade/content/gui/pgrace_train_grade/weight.d.tl mod/pgrace_train_grade/_content.json
-git commit -m "feat: train weight sums"
+git commit -m "feat: vehicle weight sums"
 ```
 
 ---
@@ -463,44 +463,51 @@ require "gui.pgrace_train_grade.grade"
 require "gui.pgrace_train_grade.weight"
 ```
 
-- [ ] **Step 3: Verify**
+- [ ] **Step 3: Rename the display name**
+
+In `mod/pgrace_train_grade/_metadata/modinfo.json`, set `"name": "Vehicle Grade and Weight"`. In
+`mod/pgrace_train_grade/_metadata/description.html`, change the heading to `<h2>Vehicle Grade and Weight</h2>`. The
+modId, folder and repo name stay `pgrace_train_grade` / `tf3_train_grade`. (The summary and description TODOs are
+filled in before the first upload, not now.)
+
+- [ ] **Step 4: Verify**
 
 Run: `just verify`
 Expected: `0 error(s)`, then `12 passed, 0 failed`, then release-check passes. `_content.json` lists only `grade.*`
 and `weight.*`.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
 git add -A mod/pgrace_train_grade tests
-git commit -m "chore: remove template sample plugin"
+git commit -m "chore: remove template sample plugin; rename to Vehicle Grade and Weight"
 ```
 
 ---
 
-### Task 4: `train_data.tl`, engine reads (with the probe)
+### Task 4: `vehicle_data.tl`, engine reads (with the probe)
 
 This module is verified in-game, not unit-tested.
 
 **Files:**
-- Create: `mod/pgrace_train_grade/tealdef/gui/pgrace_train_grade/train_data.d.tl`
+- Create: `mod/pgrace_train_grade/tealdef/gui/pgrace_train_grade/vehicle_data.d.tl`
 - Modify: `mod/pgrace_train_grade/tealdef/pgrace_train_grade_def.d.tl`
-- Create: `mod/pgrace_train_grade/content/gui/pgrace_train_grade/train_data.tl`
+- Create: `mod/pgrace_train_grade/content/gui/pgrace_train_grade/vehicle_data.tl`
 
 - [ ] **Step 1: Write the type file**
 
-`mod/pgrace_train_grade/tealdef/gui/pgrace_train_grade/train_data.d.tl`:
+`mod/pgrace_train_grade/tealdef/gui/pgrace_train_grade/vehicle_data.d.tl`:
 
 ```teal
 -- Reads game state for the speed strip. Verified in-game, not unit-tested.
-global record PgraceTrainGradeTrainData
+global record PgraceTrainGradeVehicleData
 	record Reading
 		weight : PgraceTrainGradeWeight.Weight
 		-- nil when unknown
 		grade : number
 	end
 
-	-- nil unless the entity is a rail vehicle that isn't at a terminal. May throw; callers pcall it.
+	-- nil unless the entity is a land vehicle (rail, tram or road) that isn't at a terminal. May throw; callers pcall it.
 	read : function(entity : Engine.Entity) : Reading
 end
 ```
@@ -512,20 +519,27 @@ end
 ```teal
 require "gui.pgrace_train_grade.grade"
 require "gui.pgrace_train_grade.weight"
-require "gui.pgrace_train_grade.train_data"
+require "gui.pgrace_train_grade.vehicle_data"
 ```
 
 - [ ] **Step 3: Implement**
 
-`mod/pgrace_train_grade/content/gui/pgrace_train_grade/train_data.tl`:
+`mod/pgrace_train_grade/content/gui/pgrace_train_grade/vehicle_data.tl`:
 
 ```teal
 local grade = ug_require "pgrace_train_grade::/gui/pgrace_train_grade/grade.tl" as PgraceTrainGradeGrade
 local weight = ug_require "pgrace_train_grade::/gui/pgrace_train_grade/weight.tl" as PgraceTrainGradeWeight
 
-local train_data : PgraceTrainGradeTrainData = {}
+local vehicle_data : PgraceTrainGradeVehicleData = {}
 
 local LOG_PREFIX = "[train_grade] "
+
+-- Trains, trams, buses and trucks; not ships or aircraft.
+local LAND_CARRIERS : {Carrier : boolean} = {
+	[api.type["enum"].Carrier.RAIL] = true,
+	[api.type["enum"].Carrier.TRAM] = true,
+	[api.type["enum"].Carrier.ROAD] = true,
+}
 
 local type Segment = PgraceTrainGradeGrade.Segment
 
@@ -576,8 +590,8 @@ local function cargoLoads(tv : Engine.Component.TransportVehicle, entity : Engin
 	return loads
 end
 
--- Track segments from the front edge backwards, enough to cover the train.
-local function segmentsBehind(movePath : Engine.Component.MovePath, trainLength : number) : {Segment}, {string}
+-- Track or lane segments from the front edge backwards, enough to cover the vehicle.
+local function segmentsBehind(movePath : Engine.Component.MovePath, vehicleLength : number) : {Segment}, {string}
 	local segments : {Segment} = {}
 	local flags : {string} = {}   -- PROBE (remove before release)
 	local networks : {Engine.Entity : Engine.Component.TransportNetwork} = {}
@@ -608,7 +622,7 @@ local function segmentsBehind(movePath : Engine.Component.MovePath, trainLength 
 		flags[#flags + 1] = forward and "F" or "R"   -- PROBE (remove before release)
 		collected = collected + geometry.length
 		-- the front segment only partly lies behind the front, so keep one extra segment's worth
-		if collected >= trainLength + segments[1].length then
+		if collected >= vehicleLength + segments[1].length then
 			break
 		end
 		i = i - 1
@@ -618,9 +632,9 @@ end
 
 local probeCounter = 0   -- PROBE (remove before release)
 
-function train_data.read(entity : Engine.Entity) : PgraceTrainGradeTrainData.Reading
+function vehicle_data.read(entity : Engine.Entity) : PgraceTrainGradeVehicleData.Reading
 	local tv = api.engine.getComponent(entity, api.type.ComponentType.TRANSPORT_VEHICLE) as Engine.Component.TransportVehicle
-	if tv == nil or tv.carrier ~= api.type["enum"].Carrier.RAIL then
+	if tv == nil or not LAND_CARRIERS[tv.carrier] then
 		return nil
 	end
 	if tv.state == api.type["enum"].TransportVehicleState.AT_TERMINAL then
@@ -669,7 +683,7 @@ function train_data.read(entity : Engine.Entity) : PgraceTrainGradeTrainData.Rea
 	return { weight = w, grade = g }
 end
 
-return train_data
+return vehicle_data
 ```
 
 - [ ] **Step 4: Type-check**
@@ -680,8 +694,8 @@ Expected: `0 error(s)`. (`CargoTypeId` is a plain `integer` alias, so the cargo 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add mod/pgrace_train_grade/tealdef mod/pgrace_train_grade/content/gui/pgrace_train_grade/train_data.tl mod/pgrace_train_grade/content/gui/pgrace_train_grade/train_data.d.tl mod/pgrace_train_grade/_content.json
-git commit -m "feat: read train weight and grade from the engine (with probe)"
+git add mod/pgrace_train_grade/tealdef mod/pgrace_train_grade/content/gui/pgrace_train_grade/vehicle_data.tl mod/pgrace_train_grade/content/gui/pgrace_train_grade/vehicle_data.d.tl mod/pgrace_train_grade/_content.json
+git commit -m "feat: read land vehicle weight and grade from the engine (with probe)"
 ```
 
 ---
@@ -705,7 +719,7 @@ local entity_window_util = ug_require "::/gui/entity_window/entity_window_util.t
 local gui_react_util = ug_require "::/gui/main/gui_react_util.tl" as GuiReactUtil
 local lang_util = ug_require "::/scripts/lang_util.tl" as LangUtil
 local grade = ug_require "pgrace_train_grade::/gui/pgrace_train_grade/grade.tl" as PgraceTrainGradeGrade
-local train_data = ug_require "pgrace_train_grade::/gui/pgrace_train_grade/train_data.tl" as PgraceTrainGradeTrainData
+local vehicle_data = ug_require "pgrace_train_grade::/gui/pgrace_train_grade/vehicle_data.tl" as PgraceTrainGradeVehicleData
 
 local LOG_PREFIX = "[train_grade] "
 local WEIGHT_ICON = "::/gui/line_vehicle_mgmt/icons/symbol_weight.tga"
@@ -729,8 +743,8 @@ end
 local reported : {Engine.Entity : boolean} = {}
 
 local function computeState(entity : Engine.Entity) : StripState
-	local ok, readingOrError = pcall(function() : PgraceTrainGradeTrainData.Reading
-		return train_data.read(entity)
+	local ok, readingOrError = pcall(function() : PgraceTrainGradeVehicleData.Reading
+		return vehicle_data.read(entity)
 	end)
 	if not ok then
 		if not reported[entity] then
@@ -739,7 +753,7 @@ local function computeState(entity : Engine.Entity) : StripState
 		end
 		return { visible = false, weightText = "", weightTooltip = "", gradeText = "", gradeIcon = "" }
 	end
-	local reading = readingOrError as PgraceTrainGradeTrainData.Reading
+	local reading = readingOrError as PgraceTrainGradeVehicleData.Reading
 	if reading == nil then
 		return { visible = false, weightText = "", weightTooltip = "", gradeText = "", gradeIcon = "" }
 	end
@@ -895,18 +909,20 @@ Expected: a symlink in the staging area pointing at `mod/pgrace_train_grade` (id
 
 - [ ] **Step 2: Hand the user this checklist**
 
-> Restart TF3, enable **Train Grade** if it's not already on, load a save with freight trains, then:
+> Restart TF3, enable **Vehicle Grade and Weight** if it's not already on, load a save with freight trains, buses or
+> trucks on hilly ground, then:
 > 1. Open a loaded freight train's window while it's running on a known grade. Watch it over a **crest** and a
 >    **dip**. As the locomotive (which the camera follows) passes the crest, the grade should start falling **right
 >    away**. If it only changes after the last wagon passes, the path position is the back of the train, not the
 >    front.
 > 2. Watch a train **reverse** at a terminus, if a line does that. Uphill should still read +.
-> 3. Open a **passenger train**'s window, then a **bus**'s window, then a **person in a car**. The bus and the person
->    should look exactly as before.
-> 4. Watch a train **arrive** at a station and **depart**: the two pills should vanish at the platform and come back
->    when it leaves.
-> 5. Hover the weight pill and check the tooltip (Empty · Cargo).
-> 6. Tell me when you're done; a screenshot of the strip helps too.
+> 3. Open a **passenger train**'s window, a **bus or truck** climbing a hill, and a **tram**: each should show both
+>    pills, with uphill reading +.
+> 4. Open a **ship**, an **aircraft** and a **person in a car**: these should look exactly as before.
+> 5. Watch a train and a bus **arrive** at a stop and **depart**: the two pills should vanish at the stop and come
+>    back when the vehicle leaves.
+> 6. Hover the weight pill and check the tooltip (Empty · Cargo).
+> 7. Tell me when you're done; a screenshot of the strip helps too.
 
 - [ ] **Step 3: Read the probe**
 
@@ -915,9 +931,12 @@ grep -h "\[train_grade\]" ~/.local/share/Steam/userdata/12818001/3493540/local/c
 ```
 
 Check against the spec's assumptions:
-- **a. `pathPos` is the front.** Confirmed by checklist item 1.
+- **a. `pathPos` is the front.** Confirmed by checklist item 1. For buses and trams, the probe lines for their
+  entities must show `edges=` > 0 and a `grade` that isn't `nil`.
+- **a2. Lane edges follow the street.** A bus on a hill should read about the same grade as a train on a similar slope;
+  `zFront` changes smoothly.
 - **b. The meaning of `pos01` on reversed edges.** `walked` shows `R` on reversed edges. If the grade's sign is wrong
-  only when the front edge is `R`, `pos01` runs in travel direction: in `train_data.read`, pass
+  only when the front edge is `R`, `pos01` runs in travel direction: in `vehicle_data.read`, pass
   `segments[1].reversed and (1 - pos01) or pos01` as `frontT`.
 - **c. `occupiedBackIndex`.** For information only: the walk doesn't depend on it.
 - **d. `CargoType.weight` units.** `loads=` shows `countxunitWeight`. If a full coal wagon's `cargo` comes out about
@@ -929,8 +948,8 @@ Check against the spec's assumptions:
 - [ ] **Step 4: Fix what the probe shows, remove the probe, record the findings**
 
 - Delete every line marked `-- PROBE (remove before release)`, along with the `flags` return value and the
-  `probeCounter` block in `train_data.tl`. `segmentsBehind` then returns only `{Segment}`; update its caller.
-- Record the verified facts (`MOVE_PATH` on trains, the meaning of `pathPos`, the `pos01` direction, the
+  `probeCounter` block in `vehicle_data.tl`. `segmentsBehind` then returns only `{Segment}`; update its caller.
+- Record the verified facts (`MOVE_PATH` on trains, trams and road vehicles, the meaning of `pathPos`, the `pos01` direction, the
   `CargoType.weight` unit, `calcPosition` z) in the kit's `../AGENTS.md` under *Game data facts*, and commit that in
   the kit repo.
 - Run `just verify`, then commit in the mod repo:
