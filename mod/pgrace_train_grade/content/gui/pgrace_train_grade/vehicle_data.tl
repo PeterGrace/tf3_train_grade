@@ -19,6 +19,7 @@ local record Consist
 	key : string
 	emptyKgs : {number}
 	length : number
+	payloadMaxKg : number   -- PROBE (remove before release)
 end
 
 -- Intentionally never pruned: one small entry per vehicle viewed.
@@ -36,7 +37,7 @@ local function consistOf(tv : Engine.Component.TransportVehicle, entity : Engine
 	if cached ~= nil and cached.key == key then
 		return cached
 	end
-	local result : Consist = { key = key, emptyKgs = {}, length = 0 }
+	local result : Consist = { key = key, emptyKgs = {}, length = 0, payloadMaxKg = 0 }   -- PROBE (remove before release)
 	for _, part in ipairs(tv.transportVehicleConfig.vehicles) do
 		local model = api.res.modelRep.get(part.part.modelId)
 		local emptyKg = 0.0
@@ -44,6 +45,9 @@ local function consistOf(tv : Engine.Component.TransportVehicle, entity : Engine
 			local land = model.metadata["landVehicle"] as ModelMetadata.LandVehicle
 			local extent = model.metadata["extent"] as Extent
 			emptyKg = land ~= nil and land.weightEmpty or 0
+			if land ~= nil and land.weightMaxPayload ~= nil then   -- PROBE (remove before release)
+				result.payloadMaxKg = result.payloadMaxKg + land.weightMaxPayload   -- PROBE (remove before release)
+			end   -- PROBE (remove before release)
 			if extent ~= nil then
 				result.length = result.length + (extent.bbMax.x - extent.bbMin.x)
 			end
@@ -117,7 +121,7 @@ local function segmentsBehind(movePath : Engine.Component.MovePath, vehicleLengt
 	return segments, flags
 end
 
-local probeCounter = 0   -- PROBE (remove before release)
+local probeCounts : {Engine.Entity : integer} = {}   -- PROBE (remove before release)
 
 function vehicle_data.read(entity : Engine.Entity) : PgraceTrainGradeVehicleData.Reading
 	local tv = api.engine.getComponent(entity, api.type.ComponentType.TRANSPORT_VEHICLE) as Engine.Component.TransportVehicle
@@ -151,8 +155,9 @@ function vehicle_data.read(entity : Engine.Entity) : PgraceTrainGradeVehicleData
 	end
 
 	-- PROBE (remove before release): about once a second per open window (polled every 0.25 s)
-	probeCounter = probeCounter + 1
-	if probeCounter % 4 == 0 then
+	local n = (probeCounts[entity] or 0) + 1   -- PROBE (remove before release)
+	probeCounts[entity] = n   -- PROBE (remove before release)
+	if n % 4 == 0 then   -- PROBE (remove before release)
 		local loadText : {string} = {}
 		for _, load in ipairs(loads) do
 			loadText[#loadText + 1] = tostring(load.count) .. "x" .. tostring(load.unitWeight)
@@ -166,16 +171,46 @@ function vehicle_data.read(entity : Engine.Entity) : PgraceTrainGradeVehicleData
 				zFront = zRes as number   -- PROBE (remove before release)
 			end   -- PROBE (remove before release)
 		end   -- PROBE (remove before release)
+		local pos : number = nil   -- PROBE (remove before release)
+		local edgeType : string = nil   -- PROBE (remove before release)
+		if movePath ~= nil then   -- PROBE (remove before release)
+			local pOk, pRes = pcall(function() : number   -- PROBE (remove before release)
+				return movePath.dyn.pathPos.pos   -- PROBE (remove before release)
+			end)   -- PROBE (remove before release)
+			if pOk then   -- PROBE (remove before release)
+				pos = pRes as number   -- PROBE (remove before release)
+			end   -- PROBE (remove before release)
+			local eOk, eRes = pcall(function() : string   -- PROBE (remove before release)
+				if #movePath.path.edges > 0 then   -- PROBE (remove before release)
+					return type(movePath.path.edges[1])   -- PROBE (remove before release)
+				end   -- PROBE (remove before release)
+				return "none"   -- PROBE (remove before release)
+			end)   -- PROBE (remove before release)
+			if eOk then   -- PROBE (remove before release)
+				edgeType = eRes as string   -- PROBE (remove before release)
+			end   -- PROBE (remove before release)
+		end   -- PROBE (remove before release)
+		local frontLen : number = nil   -- PROBE (remove before release)
+		if #segments > 0 then   -- PROBE (remove before release)
+			frontLen = segments[1].length   -- PROBE (remove before release)
+		end   -- PROBE (remove before release)
 		debugPrint(LOG_PREFIX .. "probe entity=" .. tostring(entity)
+			.. " name=" .. tostring(api.engine.util.getEntityName(entity))   -- PROBE (remove before release)
+			.. " carrier=" .. tostring(tv.carrier)   -- PROBE (remove before release)
+			.. " state=" .. tostring(tv.state)   -- PROBE (remove before release)
 			.. " edgeIndex=" .. tostring(movePath and movePath.dyn.pathPos.edgeIndex)
 			.. " pos01=" .. tostring(movePath and movePath.dyn.pathPos.pos01)
+			.. " pos=" .. tostring(pos)   -- PROBE (remove before release)
+			.. " frontLen=" .. tostring(frontLen)   -- PROBE (remove before release)
 			.. " occupiedBack=" .. tostring(movePath and movePath.occupiedBackIndex)
 			.. " occupiedFront=" .. tostring(movePath and movePath.occupiedFrontIndex)
 			.. " edges=" .. tostring(movePath and #movePath.path.edges)
+			.. " edgeType=" .. tostring(edgeType)   -- PROBE (remove before release)
 			.. " reverse=" .. tostring(movePath and movePath.reverse)
 			.. " walked=" .. table.concat(flags, "")
 			.. " zFront=" .. tostring(zFront)
 			.. " length=" .. tostring(consist.length)
+			.. " payloadMax=" .. tostring(consist.payloadMaxKg)   -- PROBE (remove before release)
 			.. " grade=" .. tostring(g)
 			.. " loads=" .. table.concat(loadText, ",")
 			.. " empty=" .. tostring(w.empty) .. " cargo=" .. tostring(w.cargo) .. " gross=" .. tostring(w.gross))
