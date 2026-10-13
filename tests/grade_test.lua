@@ -50,6 +50,22 @@ t.test("averageGrade: a reversed edge flips the sign", function()
 	near(grade.averageGrade({ edge(500, 0, 10, true) }, 0.2, 200), -0.02)
 end)
 
+t.test("averageGrade: a reversed edge behind the front", function()
+	-- front edge rises 2 m over 100 m (front at z = 1); the edge behind is travelled backwards and, in its own
+	-- direction, falls 2 m, so travelling it climbs. 50 m + 50 m: back at z = -1, rise 2 m over 100 m.
+	near(grade.averageGrade({ edge(100, 0, 2), edge(100, 0, -2, true) }, 0.5, 100), 0.02)
+end)
+
+t.test("averageGrade: a zero-length edge is skipped", function()
+	local segments = {
+		edge(100, 4, 2),
+		edge(0, 4, 0),     -- zero-length edge at the junction height
+		edge(100, 2, 2),
+		edge(100, 0, 2),
+	}
+	near(grade.averageGrade(segments, 0.5, 200), 0.02)
+end)
+
 t.test("averageGrade: a path shorter than the vehicle uses what it covers", function()
 	-- front at t = 0.5 of a 100 m edge rising 2 m: only 50 m behind the front, 1 m of rise
 	near(grade.averageGrade({ edge(100, 0, 2) }, 0.5, 300), 0.02)
