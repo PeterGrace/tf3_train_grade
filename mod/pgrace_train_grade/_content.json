@@ -3,6 +3,8 @@
     "files": [
         "gui/pgrace_train_grade/grade.d.tl",
         "gui/pgrace_train_grade/grade.tl",
+        "gui/pgrace_train_grade/vehicle_data.d.tl",
+        "gui/pgrace_train_grade/vehicle_data.tl",
         "gui/pgrace_train_grade/weight.d.tl",
         "gui/pgrace_train_grade/weight.tl"
     ]
