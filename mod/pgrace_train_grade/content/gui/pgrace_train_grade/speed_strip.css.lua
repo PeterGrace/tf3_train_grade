@@ -18,7 +18,8 @@ function data()
 		},
 		backgroundColor1 = color_util.withTransparencyRaw(colorDefault.BaseVeryDark, transparency.Low),
 		padding = { 1, 1, 1, 1 },
-		margin = { 1, 0, 1, 0 },
+		-- top, right, bottom, left: a few pixels between the pills and before the speed box
+		margin = { 1, 4, 1, 0 },
 	})
 	a("R::PgraceTrainGradeStripEntry TextView", {
 		margin = { 0, 2, 0, 2 },
