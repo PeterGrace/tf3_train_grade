@@ -139,7 +139,19 @@ local function edgeOf(entry : any) : EdgeId, boolean
 end
 
 -- Track or lane segments from the front edge backwards, enough to cover the vehicle.
+-- pathPos.pos01 runs in the direction of travel (verified in-game), so on a reversed edge the edge's own parameter
+-- is 1 - pos01.
+local function frontParam(segments : {Segment}, pos01 : number) : number
+	if #segments > 0 and segments[1].reversed then
+		return 1 - pos01
+	end
+	return pos01
+end
+
+local lastWalk : {string} = {}   -- PROBE (remove before release)
+
 local function segmentsBehind(movePath : Engine.Component.MovePath, vehicleLength : number) : {Segment}, {string}
+	lastWalk = {}   -- PROBE (remove before release)
 	local segments : {Segment} = {}
 	local flags : {string} = {}   -- PROBE (remove before release)
 	local networks : {Engine.Entity : Engine.Component.TransportNetwork} = {}
@@ -176,6 +188,14 @@ local function segmentsBehind(movePath : Engine.Component.MovePath, vehicleLengt
 			reversed = not forward,
 		}
 		flags[#flags + 1] = forward and "F" or "R"   -- PROBE (remove before release)
+		local z0, z1 = "?", "?"   -- PROBE (remove before release)
+		local ok0, v0 = pcall(function() : number return api.engine.util.transport.calcPosition(geometry, 0).z end)   -- PROBE (remove before release)
+		local ok1, v1 = pcall(function() : number return api.engine.util.transport.calcPosition(geometry, 1).z end)   -- PROBE (remove before release)
+		if ok0 then z0 = string.format("%.2f", v0 as number) end   -- PROBE (remove before release)
+		if ok1 then z1 = string.format("%.2f", v1 as number) end   -- PROBE (remove before release)
+		lastWalk[#lastWalk + 1] = tostring(edgeId.entity) .. ":" .. tostring(edgeId.index)   -- PROBE (remove before release)
+			.. (forward and " F" or " R") .. " len=" .. string.format("%.1f", geometry.length)   -- PROBE (remove before release)
+			.. " z0=" .. z0 .. " z1=" .. z1   -- PROBE (remove before release)
 		collected = collected + geometry.length
 		-- the front segment only partly lies behind the front, so keep one extra segment's worth
 		if collected >= vehicleLength + segments[1].length then
@@ -219,7 +239,7 @@ function vehicle_data.read(entity : Engine.Entity) : PgraceTrainGradeVehicleData
 		-- a failed grade read must not hide the weight
 		local ok, res = pcall(function() : number
 			segments, flags = segmentsBehind(movePath, consist.length)
-			return grade.averageGrade(segments, movePath.dyn.pathPos.pos01, consist.length)
+			return grade.averageGrade(segments, frontParam(segments, movePath.dyn.pathPos.pos01), consist.length)
 		end)
 		if ok then
 			g = res as number
@@ -240,7 +260,7 @@ function vehicle_data.read(entity : Engine.Entity) : PgraceTrainGradeVehicleData
 		local zFront : number = nil   -- PROBE (remove before release)
 		if #segments > 0 and movePath ~= nil then   -- PROBE (remove before release)
 			local zOk, zRes = pcall(function() : number   -- PROBE (remove before release)
-				return segments[1].heightAt(movePath.dyn.pathPos.pos01)   -- PROBE (remove before release)
+				return segments[1].heightAt(frontParam(segments, movePath.dyn.pathPos.pos01))   -- PROBE (remove before release)
 			end)   -- PROBE (remove before release)
 			if zOk then   -- PROBE (remove before release)
 				zFront = zRes as number   -- PROBE (remove before release)
@@ -289,6 +309,10 @@ function vehicle_data.read(entity : Engine.Entity) : PgraceTrainGradeVehicleData
 			.. " grade=" .. tostring(g)
 			.. " loads=" .. table.concat(loadText, ",")
 			.. " empty=" .. tostring(w.empty) .. " cargo=" .. tostring(w.cargo) .. " gross=" .. tostring(w.gross))
+		if g ~= nil and math.abs(g) > 0.15 then   -- PROBE (remove before release)
+			debugPrint(LOG_PREFIX .. "probe spike entity=" .. tostring(entity) .. " grade=" .. tostring(g)   -- PROBE (remove before release)
+				.. " walk: " .. table.concat(lastWalk, " | "))   -- PROBE (remove before release)
+		end   -- PROBE (remove before release)
 	end
 
 	return { weight = w, grade = g }
