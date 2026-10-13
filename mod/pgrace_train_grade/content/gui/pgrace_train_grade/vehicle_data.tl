@@ -122,6 +122,22 @@ local function cargoLoads(tv : Engine.Component.TransportVehicle, entity : Engin
 	return loads
 end
 
+-- In-game, path entries are EdgeIdDir userdata (`.edgeId`, `.dir`), not the `{EdgeId, boolean}` pairs the tealdef
+-- declares. Accept both.
+local record EdgeIdDirFields
+	edgeId : EdgeId
+	dir : boolean
+end
+
+local function edgeOf(entry : any) : EdgeId, boolean
+	if type(entry) == "table" then
+		local pair = entry as {any}
+		return pair[1] as EdgeId, pair[2] as boolean
+	end
+	local fields = entry as EdgeIdDirFields
+	return fields.edgeId, fields.dir
+end
+
 -- Track or lane segments from the front edge backwards, enough to cover the vehicle.
 local function segmentsBehind(movePath : Engine.Component.MovePath, vehicleLength : number) : {Segment}, {string}
 	local segments : {Segment} = {}
@@ -131,13 +147,12 @@ local function segmentsBehind(movePath : Engine.Component.MovePath, vehicleLengt
 	local collected = 0.0
 	local i = front
 	while i >= 1 do
-		local pair = movePath.path.edges[i]
-		if pair == nil then
+		local entry = movePath.path.edges[i]
+		if entry == nil then
 			break
 		end
-		local edgeId = pair[1] as EdgeId
-		local forward = pair[2] as boolean
-		if not api.engine.entityExists(edgeId.entity) then
+		local edgeId, forward = edgeOf(entry)
+		if edgeId == nil or not api.engine.entityExists(edgeId.entity) then
 			break
 		end
 		local network = networks[edgeId.entity]
