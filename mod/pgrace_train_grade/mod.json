@@ -1,0 +1,10 @@
+{
+    "modId": "pgrace_train_grade",
+    "revision": 1,
+    "severityAdd": "None",
+    "severityRemove": "None",
+    "cosmetic": true,
+    "dependencies": null,
+    "incompatibilities": null,
+    "params": null
+}
