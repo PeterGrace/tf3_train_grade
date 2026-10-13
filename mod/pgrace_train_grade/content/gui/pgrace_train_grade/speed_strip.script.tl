@@ -18,6 +18,8 @@ local record StripState
 	gradeIcon : string
 end
 
+local HIDDEN : StripState = { visible = false, weightText = "", weightTooltip = "", gradeText = "", gradeIcon = grade.iconFor(nil) }
+
 local record EntryParams
 	visible : boolean
 	icon : string
@@ -26,6 +28,7 @@ local record EntryParams
 end
 
 -- Entities whose read failed; the error is logged once per entity, not on every poll.
+-- Intentionally never pruned: it holds one boolean per entity whose read failed.
 local reported : {Engine.Entity : boolean} = {}
 
 local function computeState(entity : Engine.Entity) : StripState
@@ -37,11 +40,11 @@ local function computeState(entity : Engine.Entity) : StripState
 			reported[entity] = true
 			debugPrint(LOG_PREFIX .. "read failed for " .. tostring(entity) .. ": " .. tostring(readingOrError))
 		end
-		return { visible = false, weightText = "", weightTooltip = "", gradeText = "", gradeIcon = "" }
+		return HIDDEN
 	end
 	local reading = readingOrError as PgraceTrainGradeVehicleData.Reading
 	if reading == nil then
-		return { visible = false, weightText = "", weightTooltip = "", gradeText = "", gradeIcon = "" }
+		return HIDDEN
 	end
 	return {
 		visible = true,
