@@ -58,6 +58,56 @@ local function consistOf(tv : Engine.Component.TransportVehicle, entity : Engine
 	return result
 end
 
+-- The cargo files set `weightFactor` (coal 1.0, passengers 1/6), taken as tons per unit; the tealdef's `weight`
+-- reads nil in-game. Neither may exist on every cargo, so both reads are guarded; unknown counts as 0 kg.
+local record CargoWeightFields
+	weightFactor : number
+	weight : number
+end
+
+local KG_PER_TON = 1000
+local unitKgs : {CargoTypeId : number} = {}
+local cargoLogged : {CargoTypeId : boolean} = {}   -- PROBE (remove before release)
+
+local function readField(ct : CargoWeightFields, field : string) : number
+	local ok, value = pcall(function() : number
+		if field == "weightFactor" then
+			return ct.weightFactor
+		end
+		return ct.weight
+	end)
+	if ok then
+		return value as number
+	end
+	return nil
+end
+
+local function unitKg(cargo : CargoTypeId) : number
+	local cached = unitKgs[cargo]
+	if cached ~= nil then
+		return cached
+	end
+	local ct = api.res.cargoTypeRep.get(cargo) as any as CargoWeightFields
+	local factor : number = nil
+	local plain : number = nil
+	if ct ~= nil then
+		factor = readField(ct, "weightFactor")
+		plain = readField(ct, "weight")
+	end
+	if not cargoLogged[cargo] then   -- PROBE (remove before release)
+		cargoLogged[cargo] = true   -- PROBE (remove before release)
+		debugPrint(LOG_PREFIX .. "probe cargo=" .. tostring(cargo) .. " weightFactor=" .. tostring(factor) .. " weight=" .. tostring(plain))   -- PROBE (remove before release)
+	end   -- PROBE (remove before release)
+	local kg = 0.0
+	if factor ~= nil then
+		kg = factor * KG_PER_TON
+	elseif plain ~= nil then
+		kg = plain * KG_PER_TON
+	end
+	unitKgs[cargo] = kg
+	return kg
+end
+
 local function cargoLoads(tv : Engine.Component.TransportVehicle, entity : Engine.Entity) : {PgraceTrainGradeWeight.CargoLoad}
 	local loads : {PgraceTrainGradeWeight.CargoLoad} = {}
 	for i, capacity in ipairs(tv.config.capacities) do
@@ -65,7 +115,7 @@ local function cargoLoads(tv : Engine.Component.TransportVehicle, entity : Engin
 			local cargo : CargoTypeId = i - 1
 			local count = api.engine.system.simEntityAtVehicleSystem.getVehicleSimEntitiesCountForCargoType(entity, cargo)
 			if count > 0 then
-				loads[#loads + 1] = { count = count, unitWeight = api.res.cargoTypeRep.get(cargo).weight }
+				loads[#loads + 1] = { count = count, unitWeight = unitKg(cargo) }
 			end
 		end
 	end
