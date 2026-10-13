@@ -15,8 +15,9 @@ global record PgraceTrainGradeGrade
 	-- uses the distance they cover. nil if that's under 1 m.
 	averageGrade : function(segments : {Segment}, frontT : number, vehicleLength : number) : number
 
-	-- "+1.8%", "-0.4%"; "0.0%" inside +-0.05%; "—" for nil.
-	formatGrade : function(grade : number) : string
+	-- "+1.8%", "-0.4%"; "0.0%" inside +-0.05%; "—" for nil. formatNumber formats the unsigned percentage with one
+	-- decimal (the game's api.util.lang.formatNumber in-game); percentTemplate is the translated "{percent}%".
+	formatGrade : function(grade : number, formatNumber : function(number) : string, percentTemplate : string) : string
 
 	-- The track builder's slope arrow for a grade: flat, gentle (under 2%) or steep, up or down.
 	iconFor : function(grade : number) : string

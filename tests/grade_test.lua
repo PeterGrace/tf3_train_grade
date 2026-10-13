@@ -76,13 +76,23 @@ t.test("averageGrade: under 1 m covered is nil", function()
 	t.eq(grade.averageGrade({}, 0.5, 300), nil)
 end)
 
+-- Stand-ins for the game's formatter (api.util.lang.formatNumber(n, 1)) and the translated "{percent}%".
+local function dot(n) return string.format("%.1f", n) end
+local function comma(n) return (string.format("%.1f", n):gsub("%.", ",")) end
+
 t.test("formatGrade: signs, rounding, dead band, nil", function()
-	t.eq(grade.formatGrade(0.018), "+1.8%")
-	t.eq(grade.formatGrade(-0.004), "-0.4%")
-	t.eq(grade.formatGrade(0.0004), "0.0%")
-	t.eq(grade.formatGrade(-0.0004), "0.0%")
-	t.eq(grade.formatGrade(0.03456), "+3.5%")
-	t.eq(grade.formatGrade(nil), "—")
+	t.eq(grade.formatGrade(0.018, dot, "{percent}%"), "+1.8%")
+	t.eq(grade.formatGrade(-0.004, dot, "{percent}%"), "-0.4%")
+	t.eq(grade.formatGrade(0.0004, dot, "{percent}%"), "0.0%")
+	t.eq(grade.formatGrade(-0.0004, dot, "{percent}%"), "0.0%")
+	t.eq(grade.formatGrade(0.03456, dot, "{percent}%"), "+3.5%")
+	t.eq(grade.formatGrade(nil, dot, "{percent}%"), "—")
+end)
+
+t.test("formatGrade: localized number and percent template", function()
+	t.eq(grade.formatGrade(0.018, comma, "{percent} %"), "+1,8 %")
+	t.eq(grade.formatGrade(-0.081, comma, "{percent} %"), "-8,1 %")
+	t.eq(grade.formatGrade(0.0004, comma, "{percent} %"), "0,0 %")
 end)
 
 t.test("iconFor: flat, gentle, steep, both ways", function()

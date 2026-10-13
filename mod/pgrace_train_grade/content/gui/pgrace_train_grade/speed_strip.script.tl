@@ -31,6 +31,18 @@ end
 -- Intentionally never pruned: it holds one boolean per entity whose read failed.
 local reported : {Engine.Entity : boolean} = {}
 
+-- One decimal in the player's number format (decimal comma in German, ...). The base GUI never calls
+-- api.util.lang.formatNumber, so fall back to a plain "%.1f" if it's missing or fails.
+local function formatOneDecimal(n : number) : string
+	local ok, text = pcall(function() : string
+		return api.util.lang.formatNumber(n, 1)
+	end)
+	if ok and text ~= nil then
+		return text as string
+	end
+	return string.format("%.1f", n)
+end
+
 local function computeState(entity : Engine.Entity) : StripState
 	local ok, readingOrError = pcall(function() : PgraceTrainGradeVehicleData.Reading
 		return vehicle_data.read(entity)
@@ -53,7 +65,7 @@ local function computeState(entity : Engine.Entity) : StripState
 			empty = api.util.formatWeight(reading.weight.empty),
 			cargo = api.util.formatWeight(reading.weight.cargo),
 		}),
-		gradeText = grade.formatGrade(reading.grade),
+		gradeText = grade.formatGrade(reading.grade, formatOneDecimal, _("{percent}%")),
 		gradeIcon = grade.iconFor(reading.grade),
 	}
 end

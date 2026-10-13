@@ -53,14 +53,20 @@ function grade.averageGrade(segments : {Segment}, frontT : number, vehicleLength
 	return (zFront - zBack) / covered
 end
 
-function grade.formatGrade(g : number) : string
+function grade.formatGrade(g : number, formatNumber : function(number) : string, percentTemplate : string) : string
 	if g == nil then
 		return "—"
 	end
+	local percent = math.abs(g) * 100
+	local sign = ""
 	if math.abs(g) < FLAT then
-		return "0.0%"
+		percent = 0
+	else
+		sign = g > 0 and "+" or "-"
 	end
-	return string.format("%+.1f%%", g * 100)
+	local digits = formatNumber(percent)
+	local text = percentTemplate:gsub("{percent}", function() : string return digits end)
+	return sign .. text
 end
 
 function grade.iconFor(g : number) : string

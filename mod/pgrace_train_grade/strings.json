@@ -1,0 +1,50 @@
+{
+    "de": {
+        "Empty {empty} · Cargo {cargo}": "Leer {empty} · Zuladung {cargo}",
+        "{percent}%": "{percent} %"
+    },
+    "es": {
+        "Empty {empty} · Cargo {cargo}": "Vacío {empty} · Carga {cargo}",
+        "{percent}%": "{percent} %"
+    },
+    "fr": {
+        "Empty {empty} · Cargo {cargo}": "À vide {empty} · Charge {cargo}",
+        "{percent}%": "{percent} %"
+    },
+    "it": {
+        "Empty {empty} · Cargo {cargo}": "A vuoto {empty} · Carico {cargo}",
+        "{percent}%": "{percent}%"
+    },
+    "ja": {
+        "Empty {empty} · Cargo {cargo}": "空車 {empty} · 積載 {cargo}",
+        "{percent}%": "{percent}%"
+    },
+    "ko": {
+        "Empty {empty} · Cargo {cargo}": "공차 {empty} · 적재 {cargo}",
+        "{percent}%": "{percent}%"
+    },
+    "nl": {
+        "Empty {empty} · Cargo {cargo}": "Leeg {empty} · Lading {cargo}",
+        "{percent}%": "{percent}%"
+    },
+    "pl": {
+        "Empty {empty} · Cargo {cargo}": "Masa własna {empty} · Ładunek {cargo}",
+        "{percent}%": "{percent}%"
+    },
+    "pt_BR": {
+        "Empty {empty} · Cargo {cargo}": "Vazio {empty} · Carga {cargo}",
+        "{percent}%": "{percent}%"
+    },
+    "ru": {
+        "Empty {empty} · Cargo {cargo}": "Тара {empty} · Груз {cargo}",
+        "{percent}%": "{percent} %"
+    },
+    "zh_CN": {
+        "Empty {empty} · Cargo {cargo}": "空车 {empty} · 载荷 {cargo}",
+        "{percent}%": "{percent}%"
+    },
+    "zh_TW": {
+        "Empty {empty} · Cargo {cargo}": "空車 {empty} · 載荷 {cargo}",
+        "{percent}%": "{percent}%"
+    }
+}
