@@ -123,8 +123,18 @@ end
 
 local probeCounts : {Engine.Entity : integer} = {}   -- PROBE (remove before release)
 
+local probeSeen : {Engine.Entity : boolean} = {}   -- PROBE (remove before release)
+
 function vehicle_data.read(entity : Engine.Entity) : PgraceTrainGradeVehicleData.Reading
 	local tv = api.engine.getComponent(entity, api.type.ComponentType.TRANSPORT_VEHICLE) as Engine.Component.TransportVehicle
+	if not probeSeen[entity] then   -- PROBE (remove before release)
+		probeSeen[entity] = true   -- PROBE (remove before release)
+		debugPrint(LOG_PREFIX .. "probe read entity=" .. tostring(entity) .. " tv=" .. tostring(tv ~= nil)   -- PROBE (remove before release)
+			.. " carrier=" .. tostring(tv and tv.carrier) .. " (" .. type(tv and tv.carrier) .. ")"   -- PROBE (remove before release)
+			.. " rail=" .. tostring(api.type["enum"].Carrier.RAIL) .. " (" .. type(api.type["enum"].Carrier.RAIL) .. ")"   -- PROBE (remove before release)
+			.. " inSet=" .. tostring(tv ~= nil and LAND_CARRIERS[tv.carrier] == true)   -- PROBE (remove before release)
+			.. " state=" .. tostring(tv and tv.state))   -- PROBE (remove before release)
+	end   -- PROBE (remove before release)
 	if tv == nil or not LAND_CARRIERS[tv.carrier] then
 		return nil
 	end
