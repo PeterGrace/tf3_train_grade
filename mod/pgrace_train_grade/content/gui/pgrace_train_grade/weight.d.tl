@@ -3,7 +3,7 @@ global record PgraceTrainGradeWeight
 	-- One cargo type on board.
 	record CargoLoad
 		count : integer
-		-- kg per unit (CargoType.weight; unit confirmed by the probe)
+		-- kg per unit (the cargo's weightFactor, tons per unit, × 1000; see vehicle_data.tl)
 		unitWeight : number
 	end
 
