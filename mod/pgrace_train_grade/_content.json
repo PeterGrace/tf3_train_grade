@@ -3,10 +3,6 @@
     "files": [
         "gui/pgrace_train_grade/grade.d.tl",
         "gui/pgrace_train_grade/grade.tl",
-        "gui/pgrace_train_grade/industry_plugin.res.lua",
-        "gui/pgrace_train_grade/pgrace_train_grade.script.tl",
-        "gui/pgrace_train_grade/util.d.tl",
-        "gui/pgrace_train_grade/util.tl",
         "gui/pgrace_train_grade/weight.d.tl",
         "gui/pgrace_train_grade/weight.tl"
     ]
